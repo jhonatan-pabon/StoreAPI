@@ -52,7 +52,7 @@ El proyecto permite crear, consultar, actualizar y eliminar productos mediante e
 ### 1. Clonar el repositorio
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
+git clone https://github.com/jhonatan-pabon/StoreAPI.git
 cd StoreAPI
 ```
 
