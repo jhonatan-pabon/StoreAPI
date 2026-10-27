@@ -1,0 +1,25 @@
+# VARIABLES DE ENTORNO Y SECRETOS
+.env
+.env.*
+
+# EXCEPCION PARA PLANTILLAS DE CONFIGURACION SIN SECRETOS
+!.env.example
+
+# ENTORNO VIRTUAL
+.venv/
+
+# ARCHIVOS GENERADOS POR PYTHON
+pycache/
+__pycache__/
+*.py[cod]
+
+# CACHE DE PRUEBAS
+.pytest_cache/
+
+# ARCHIVOS DE CONFIGURACION DE EDITORES
+.vscode/
+.idea/
+
+# COBERTURA DE PRUEBAS
+.coverage
+htmlcov/
