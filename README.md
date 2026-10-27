@@ -56,8 +56,6 @@ git clone https://github.com/jhonatan-pabon/StoreAPI.git
 cd StoreAPI
 ```
 
-> Reemplaza `<URL_DEL_REPOSITORIO>` por la URL de tu repositorio de GitHub.
-
 ### 2. Crear y activar el entorno virtual
 
 En Windows:
