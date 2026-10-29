@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from extensions import db
 from models import Product
 from sqlalchemy.exc import SQLAlchemyError
+from auth_utils import admin_required
 
 products_bp = Blueprint("products", __name__)
 
@@ -45,6 +46,7 @@ def get_product(product_id):
         }), 200
 
 @products_bp.route("/api/products", methods=["POST"])
+@admin_required()
 def create_product():
     data = request.get_json()
         
@@ -122,6 +124,7 @@ def create_product():
 
 
 @products_bp.route("/api/products/<int:product_id>", methods=["PATCH"])
+@admin_required()
 def update_product(product_id):
     product = db.session.get(Product, product_id)
 
@@ -232,6 +235,7 @@ def update_product(product_id):
 
 
 @products_bp.route("/api/products/<int:product_id>", methods=["DELETE"])
+@admin_required()
 def delete_product(product_id):
     product = db.session.get(Product, product_id)
     

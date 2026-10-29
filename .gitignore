@@ -23,3 +23,8 @@ __pycache__/
 # COBERTURA DE PRUEBAS
 .coverage
 htmlcov/
+
+# DISTRIBUCIÓN Y COMPILACIÓN
+build/
+dist/
+*.egg-info/

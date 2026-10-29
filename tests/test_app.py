@@ -35,6 +35,7 @@ def test_get_product_found(client, app):
                 
         response = client.get(f"/api/products/{product_id}")
         
+        assert response.content_type == "application/json"
         assert response.status_code == 200
         assert response.json["id"] == product_id
         assert response.json["name"] == "Camiseta de prueba"
@@ -79,15 +80,19 @@ def test_get_products_empty(client):
         assert response.content_type == "application/json"
         assert response.json == []
 
-def test_create_product(client):
-        response = client.post("/api/products", json={
-                "name": "Camiseta de prueba",
-                "brand": "Test Brand",
-                "size": "M",
-                "description": "Producto de prueba",
-                "stock": 10,
-                "price": 25000.00
-        })
+def test_create_product(client, admin_headers):
+        response = client.post(
+                "/api/products",
+                json={
+                        "name": "Camiseta de prueba",
+                        "brand": "Test Brand",
+                        "size": "M",
+                        "description": "Producto de prueba",
+                        "stock": 10,
+                        "price": 25000.00
+                },
+                headers=admin_headers
+        )
         
         assert response.status_code == 201
         assert response.json["name"] == "Camiseta de prueba"
@@ -98,106 +103,138 @@ def test_create_product(client):
         assert response.json["price"] == "25000.00"
         assert "id" in response.json
 
-def test_create_product_without_name(client):
-        response = client.post("/api/products", json={
-                "brand": "Test Brand",
-                "size": "M",
-                "stock": 10,
-                "price": 25000.00
-        })
+def test_create_product_without_name(client, admin_headers):
+        response = client.post(
+                "/api/products",
+                json={
+                        "brand": "Test Brand",
+                        "size": "M",
+                        "stock": 10,
+                        "price": 25000.00
+                },
+                headers=admin_headers
+        )
         
         assert response.status_code == 400
         assert response.json["error"] == "El nombre es obligatorio"
 
-def test_create_product_with_negative_price(client):
-        response = client.post("/api/products", json={
-                "name": "Camiseta de prueba",
-                "brand": "Test Brand",
-                "size": "M",
-                "description": "Producto de prueba",
-                "stock": 10,
-                "price": -100
-        })
+def test_create_product_with_negative_price(client, admin_headers):
+        response = client.post(
+                "/api/products",
+                json={
+                        "name": "Camiseta de prueba",
+                        "brand": "Test Brand",
+                        "size": "M",
+                        "description": "Producto de prueba",
+                        "stock": 10,
+                        "price": -100
+                },
+                headers=admin_headers
+        )
         
         assert response.status_code == 400
         assert response.json["error"] == "El precio debe ser mayor que cero"
 
-def test_create_product_with_negative_stock(client):
-        response = client.post("/api/products", json={
-                "name": "Camiseta de prueba",
-                "brand": "Test Brand",
-                "size": "M",
-                "description": "Producto de prueba",
-                "stock": -5,
-                "price": 25000.00
-        })
+def test_create_product_with_negative_stock(client, admin_headers):
+        response = client.post(
+                "/api/products",
+                json={
+                        "name": "Camiseta de prueba",
+                        "brand": "Test Brand",
+                        "size": "M",
+                        "description": "Producto de prueba",
+                        "stock": -5,
+                        "price": 25000.00
+                },
+                headers=admin_headers
+        )
         
         assert response.status_code == 400
         assert response.json["error"] == "El stock no puede ser negativo"
 
-def test_create_product_without_size(client):
-        response = client.post("/api/products", json={
-                "name": "Camiseta de prueba",
-                "brand": "Test Brand",
-                "description": "Producto de prueba",
-                "stock": 10,
-                "price": 25000.00
-        })
+def test_create_product_without_size(client, admin_headers):
+        response = client.post(
+                "/api/products",
+                json={
+                        "name": "Camiseta de prueba",
+                        "brand": "Test Brand",
+                        "description": "Producto de prueba",
+                        "stock": 10,
+                        "price": 25000.00
+                },
+                headers=admin_headers
+        )
         
         assert response.status_code == 400
         assert response.json["error"] == "La talla es obligatoria"
 
-def test_create_product_with_blank_name(client):
-        response = client.post("/api/products", json={
-                "name": "   ",
-                "brand": "Urban Style",
-                "size": "L",
-                "price": 55000,
-                "stock": 10
-        })
+def test_create_product_with_blank_name(client, admin_headers):
+        response = client.post(
+                "/api/products",
+                json={
+                        "name": "   ",
+                        "brand": "Urban Style",
+                        "size": "L",
+                        "price": 55000,
+                        "stock": 10
+                },
+                headers=admin_headers
+        )
         
         assert response.status_code == 400
         assert response.get_json()["error"] == ("El nombre es obligatorio")
 
-def test_create_product_with_invalid_brand(client):
-        response = client.post("/api/products", json={
-                "name": "Camiseta",
-                "brand": 123,
-                "size": "L",
-                "price": 55000,
-                "stock": 10
-        })
+def test_create_product_with_invalid_brand(client, admin_headers):
+        response = client.post(
+                "/api/products",
+                json={
+                        "name": "Camiseta",
+                        "brand": 123,
+                        "size": "L",
+                        "price": 55000,
+                        "stock": 10
+                },
+                headers=admin_headers
+        )
         
         assert response.status_code == 400
         assert response.get_json()["error"] == ("La marca debe ser texto")
         
-def test_create_product_with_invalid_description(client):
-        response = client.post("/api/products", json={
-                "name": "Camiseta",
-                "brand": "Urban Style",
-                "size": "L",
-                "description": ["algodon", "negra"],
-                "price": 55000,
-                "stock": 10
-        })
+def test_create_product_with_invalid_description(client, admin_headers):
+        response = client.post(
+                "/api/products",
+                json={
+                        "name": "Camiseta",
+                        "brand": "Urban Style",
+                        "size": "L",
+                        "description": ["algodon", "negra"],
+                        "price": 55000,
+                        "stock": 10
+                },
+                headers=admin_headers
+        )
         
         assert response.status_code == 400
         assert response.get_json()["error"] == ("La descripcion debe ser texto")
         
-def test_create_product_with_price_cero(client):
-        response = client.post("/api/products", json={
-                "name": "Camiseta",
-                "brand": "Urban Style",
-                "size": "L",
-                "description": "ropa bonita",
-                "price": 0,
-                "stock": 10
-        })
+def test_create_product_with_price_cero(client, admin_headers):
+        response = client.post(
+                "/api/products",
+                json={
+                        "name": "Camiseta",
+                        "brand": "Urban Style",
+                        "size": "L",
+                        "description": "ropa bonita",
+                        "price": 0,
+                        "stock": 10
+                },
+                headers=admin_headers
+        )
         
         assert response.status_code == 400
         assert response.get_json()["error"] == ("El precio debe ser mayor que cero")
 
-def test_update_producto_stock(client, app):
+def test_update_producto_stock(client, app, admin_headers):
         with app.app_context():
                 product = Product(
                         name="Camiseta de prueba",
@@ -211,7 +248,13 @@ def test_update_producto_stock(client, app):
                 db.session.commit()
                 product_id = product.id
                 
-                response = client.patch(f"/api/products/{product_id}", json={"stock": 7})
+                response = client.patch(
+                        f"/api/products/{product_id}",
+                        json={
+                                "stock": 7
+                        },
+                        headers=admin_headers
+                )
                 
                 assert response.status_code == 200
                 assert response.json["id"] == product_id
@@ -219,7 +262,7 @@ def test_update_producto_stock(client, app):
                 assert response.json["name"] == "Camiseta de prueba"
                 assert response.json["price"] == "25000.00"
 
-def test_update_product_with_negative_price(client, app):
+def test_update_product_with_negative_price(client, app, admin_headers):
         with app.app_context():
                 product = Product(
                         name="Camiseta",
@@ -233,13 +276,19 @@ def test_update_product_with_negative_price(client, app):
                 db.session.commit()
                 
                 product_id = product.id
-                
-        response = client.patch(f"/api/products/{product_id}", json={"price": -100})
+
+        response = client.patch(
+                f"/api/products/{product_id}",
+                json={
+                        "price": -100
+                },
+                headers=admin_headers
+        )
         
         assert response.status_code == 400
         assert response.get_json()["error"] == ("El precio debe ser mayor que cero")
 
-def test_update_product_with_invalid_stock(client, app):
+def test_update_product_with_invalid_stock(client, app, admin_headers):
         with app.app_context():
                 product = Product(
                         name="Camiseta",
@@ -254,12 +303,18 @@ def test_update_product_with_invalid_stock(client, app):
                 
                 product_id = product.id
                 
-        response = client.patch(f"/api/products/{product_id}", json={"stock": 2.5})
+        response = client.patch(
+                f"/api/products/{product_id}",
+                json={
+                        "stock": 2.5
+                },
+                headers=admin_headers
+        )
         
         assert response.status_code == 400
         assert response.get_json()["error"] == ("El stock debe ser entero")
 
-def test_update_product_with_invalid_data_does_not_save_changes(client, app):
+def test_update_product_with_invalid_data_does_not_save_changes(client, app, admin_headers):
         with app.app_context():
                 product = Product(
                         name="Camiseta original",
@@ -274,10 +329,14 @@ def test_update_product_with_invalid_data_does_not_save_changes(client, app):
                 
                 product_id = product.id
                 
-                response = client.patch(f"/api/products/{product_id}", json={
-                        "name": "Camiseta Modificada",
-                        "price": -100
-                })
+                response = client.patch(
+                        f"/api/products/{product_id}",
+                        json={
+                                "name": "Camiseta Modificada",
+                                "price": -100
+                        },
+                        headers=admin_headers
+                )
 
                 assert response.status_code == 400
                 
@@ -288,7 +347,7 @@ def test_update_product_with_invalid_data_does_not_save_changes(client, app):
                 assert product_after["name"] == "Camiseta original"
                 assert product_after["price"] == "55000.00"
                 
-def test_update_product_stock_preserves_other_fields(client, app):
+def test_update_product_stock_preserves_other_fields(client, app, admin_headers):
         with app.app_context():
                 product = Product(
                         name="Camiseta",
@@ -303,7 +362,13 @@ def test_update_product_stock_preserves_other_fields(client, app):
                 
                 product_id = product.id
                 
-                response = client.patch(f"/api/products/{product_id}", json={"stock": 15})
+                response = client.patch(
+                        f"/api/products/{product_id}",
+                        json={
+                                "stock": 15
+                        },
+                        headers=admin_headers
+                )
                 
                 assert response.status_code == 200
                 
@@ -316,7 +381,7 @@ def test_update_product_stock_preserves_other_fields(client, app):
                 assert updated_product["description"] == "Camiseta de prueba"
                 assert updated_product["price"] == "55000.00"
 
-def test_update_product_with_invalid_brand(client, app):
+def test_update_product_with_invalid_brand(client, app, admin_headers):
         with app.app_context():
                 product = Product(
                         name="Camiseta",
@@ -331,7 +396,13 @@ def test_update_product_with_invalid_brand(client, app):
                 
                 product_id = product.id
                 
-                response = client.patch(f"/api/products/{product_id}", json={"brand": 123})
+                response = client.patch(
+                        f"/api/products/{product_id}",
+                        json={
+                                "brand": 123
+                        },
+                        headers=admin_headers
+                )
                 
                 assert response.status_code == 400
                 assert response.get_json()["error"] == ("La marca debe ser texto")
@@ -340,7 +411,7 @@ def test_update_product_with_invalid_brand(client, app):
                 
                 assert response_after.get_json()["brand"] == "Urban Style"
 
-def test_update_product_with_invalid_description(client, app):
+def test_update_product_with_invalid_description(client, app, admin_headers):
         with app.app_context():
                 product = Product(
                         name="Camiseta",
@@ -355,7 +426,13 @@ def test_update_product_with_invalid_description(client, app):
                 
                 product_id = product.id
                 
-                response = client.patch(f"/api/products/{product_id}", json={"description": ["algodón", "negra"]})
+                response = client.patch(
+                        f"/api/products/{product_id}",
+                        json={
+                                "description": ["algodón", "negra"]
+                        },
+                        headers=admin_headers
+                )
                 
                 assert response.status_code == 400
                 assert response.get_json()["error"] == ("La descripcion debe ser texto")
@@ -366,7 +443,7 @@ def test_update_product_with_invalid_description(client, app):
                 assert response_after.get_json()["description"] == ("Descripcion original")
                 
                 
-def test_update_product_with_blank_size(client, app):
+def test_update_product_with_blank_size(client, app, admin_headers):
         with app.app_context():
                 product = Product(
                         name="Camiseta",
@@ -381,7 +458,13 @@ def test_update_product_with_blank_size(client, app):
                 
                 product_id = product.id
                 
-                response = client.patch(f"/api/products/{product_id}", json={"size": "   "})
+                response = client.patch(
+                        f"/api/products/{product_id}",
+                        json={
+                                "size": "   "
+                        },
+                        headers=admin_headers
+                )
                 
                 assert response.status_code == 400
                 assert response.get_json()["error"] == ("La talla es obligatoria")
@@ -390,7 +473,7 @@ def test_update_product_with_blank_size(client, app):
                 
                 assert response_after.get_json()["size"] == "L"
                 
-def test_update_product_with_price_cero(client, app):
+def test_update_product_with_price_cero(client, app, admin_headers):
         with app.app_context():
                 product = Product(
                         name="Camiseta",
@@ -405,7 +488,13 @@ def test_update_product_with_price_cero(client, app):
                 
                 product_id = product.id
                 
-                response = client.patch(f"/api/products/{product_id}", json={"price": 0})
+                response = client.patch(
+                        f"/api/products/{product_id}",
+                        json={
+                                "price": 0
+                        },
+                        headers=admin_headers
+                )
                 
                 assert response.status_code == 400
                 assert response.get_json()["error"] == ("El precio debe ser mayor que cero")
@@ -414,7 +503,7 @@ def test_update_product_with_price_cero(client, app):
                 
                 assert response_after.get_json()["price"] == "55000.00"
         
-def test_delete_product(client, app):
+def test_delete_product(client, app, admin_headers):
         with app.app_context():
                 product = Product(
                         name="Camiseta de prueba",
@@ -430,7 +519,10 @@ def test_delete_product(client, app):
                 
                 product_id = product.id
                 
-                response = client.delete(f"/api/products/{product_id}")
+                response = client.delete(
+                        f"/api/products/{product_id}",
+                        headers=admin_headers
+                )
                 
                 assert response.status_code == 200
                 assert response.get_json()["message"] == ("Producto eliminado correctamente")
@@ -439,14 +531,47 @@ def test_delete_product(client, app):
                 
                 assert response_after_delete.status_code == 404
                 
-def test_delete_product_not_found(client):
-        response = client.delete("/api/products/999999")
+def test_delete_product_not_found(client, admin_headers):
+        response = client.delete(
+                "/api/products/999999",
+                headers=admin_headers
+        )
         
         assert response.status_code == 404
         assert response.get_json()["error"] == ("Producto no encontrado")
 
+def test_delete_product_forbidden_for_regular_user(client, app, user_headers):
+        with app.app_context():
+                product = Product(
+                        name="Camiseta protegida",
+                        brand="Urban Style",
+                        size="L",
+                        description="No debe eliminarse",
+                        stock=10,
+                        price=55000
+                )
+                db.session.add(product)
+                db.session.commit()
 
-def test_update_product_rolls_back_on_database_error(client, app):
+                product_id = product.id
+
+        response = client.delete(
+                f"/api/products/{product_id}",
+                headers=user_headers
+        )
+
+        assert response.status_code == 403
+
+        with app.app_context():
+                assert db.session.get(Product, product_id) is not None
+
+def test_delete_product_without_token(client):
+        response = client.delete("/api/products/1")
+
+        assert response.status_code == 401
+
+
+def test_update_product_rolls_back_on_database_error(client, app, admin_headers):
         with app.app_context():
                 product = Product(
                         name="Camiseta original",
@@ -465,7 +590,13 @@ def test_update_product_rolls_back_on_database_error(client, app):
                 "sqlalchemy.orm.Session.commit",
                 side_effect=SQLAlchemyError("Fallo simulado")
         ):
-                response = client.patch(f"/api/products/{product_id}", json={"name": "Camiseta modificada"})
+                response = client.patch(
+                        f"/api/products/{product_id}",
+                        json={
+                                "name": "Camiseta modificada"
+                        },
+                        headers=admin_headers
+                )
                 
         assert response.status_code == 500
         assert response.get_json()["error"] == ("No se pudo actualizar el producto")
@@ -475,17 +606,21 @@ def test_update_product_rolls_back_on_database_error(client, app):
         assert response_after.status_code == 200
         assert response_after.get_json()["name"] == "Camiseta original"
 
-def test_create_product_when_commit_fails(client):
+def test_create_product_when_commit_fails(client, admin_headers):
     with patch(
         "sqlalchemy.orm.Session.commit",
         side_effect=SQLAlchemyError("Fallo simulado")
     ):
-        response = client.post("/api/products", json={
-            "name": "Camiseta de prueba",
-            "size": "M",
-            "price": 25000,
-            "stock": 10
-        })
+        response = client.post(
+                "/api/products",
+                json={
+                        "name": "Camiseta de prueba",
+                        "size": "M",
+                        "price": 25000,
+                        "stock": 10
+                },
+                headers=admin_headers
+        )
 
     assert response.status_code == 500
     assert response.get_json()["error"] == (
@@ -501,7 +636,7 @@ def test_create_product_when_commit_fails(client):
 
         assert product is None
 
-def test_create_product_calls_rollback_when_commit_fails(client):
+def test_create_product_calls_rollback_when_commit_fails(client, admin_headers):
         with client.application.app_context():
                 session = db.session()
                 
@@ -515,12 +650,16 @@ def test_create_product_calls_rollback_when_commit_fails(client):
                                 "sqlalchemy.orm.Session.commit",
                                 side_effect=SQLAlchemyError("Fallo simulado")
                         ):
-                                response = client.post("/api/products", json={
-                                        "name": "Camiseta rollback",
-                                        "size": "M",
-                                        "price": 25000,
-                                        "stock": 10
-                                })
+                                response = client.post(
+                                        "/api/products",
+                                        json={
+                                                "name": "Camiseta rollback",
+                                                "size": "M",
+                                                "price": 25000,
+                                                "stock": 10
+                                        },
+                                        headers=admin_headers
+                                )
                                 
                         assert response.status_code == 500
                         

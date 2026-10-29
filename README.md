@@ -1,8 +1,8 @@
 # StoreAPI
 
-REST API para la gestión de productos de una tienda, desarrollada con Python y Flask.
+REST API para la gestión de productos de una tienda, desarrollada con Python y Flask. El proyecto permite crear, consultar, actualizar y eliminar productos mediante endpoints HTTP, con MySQL como sistema de gestión de bases de datos y SQLAlchemy para interactuar con ella.
 
-El proyecto permite crear, consultar, actualizar y eliminar productos mediante endpoints HTTP. Utiliza MySQL como sistema de gestión de bases de datos y SQLAlchemy para interactuar con ella.
+También incorpora autenticación mediante JWT, protección de contraseñas mediante hash y control de acceso basado en roles.
 
 ## Características
 
@@ -10,7 +10,14 @@ El proyecto permite crear, consultar, actualizar y eliminar productos mediante e
 - Validación de los datos recibidos.
 - Manejo de errores HTTP.
 - Integración con MySQL.
+- Registro e inicio de sesión de usuarios.
+- Almacenamiento de contraseñas mediante hash.
+- Autenticación mediante JSON Web Tokens (JWT).
+- Control de acceso basado en roles: usuario y administrador.
+- Migraciones de base de datos con Flask-Migrate y Alembic.
+- Configuración mediante variables de entorno.
 - Pruebas automatizadas con pytest.
+- Verificación de endpoints con Postman.
 
 ## Tecnologías utilizadas
 
@@ -20,26 +27,45 @@ El proyecto permite crear, consultar, actualizar y eliminar productos mediante e
 - **Flask-SQLAlchemy:** integración de SQLAlchemy con Flask.
 - **SQLAlchemy:** ORM para interactuar con la base de datos.
 - **PyMySQL:** conector entre Python y MySQL.
+- **Flask-JWT-Extended:** gestión de autenticación mediante JWT.
+- **Werkzeug:** generación y verificación de hashes de contraseñas.
+- **Flask-Migrate y Alembic:** gestión de migraciones de base de datos.
+- **python-dotenv:** carga de variables de entorno desde `.env`.
 - **pytest:** framework para pruebas automatizadas.
+- **Postman:** pruebas manuales de los endpoints.
 - **Git y GitHub:** control de versiones y alojamiento del código.
 
 ## Endpoints
 
 ### Health check
 
-| Método |    Endpoint   |              Descripción               |
-|--------|---------------|----------------------------------------|
-|  GET   | `/api/health` | Verifica que la API esté funcionando.  |
+| Método |   Endpoint    |             Descripción               |
+|--------|---------------|---------------------------------------|
+|  GET   | `/api/health` | Verifica que la API esté funcionando. |
+
+### Autenticación
+
+| Método |       Endpoint       |                      Descripción                       | Autenticación |
+|--------|----------------------|--------------------------------------------------------|---------------|
+|  POST  | `/api/auth/register` | Registra un usuario.                                   | Pública       |
+|  POST  | `/api/auth/login`    | Inicia sesión y devuelve un JWT.                       | Pública       |
+|  GET   | `/api/auth/me`       | Verifica el token y devuelve la identidad del usuario. | JWT           |
 
 ### Productos
 
-| Método |           Endpoint           |             Descripción             |
-|--------|------------------------------|-------------------------------------|
-|  GET   | `/api/products`              | Obtiene todos los productos.        |
-|  GET   | `/api/products/{product_id}` | Obtiene un producto por su ID.      |
-|  POST  | `/api/products`              | Crea un producto nuevo.             |
-|  PATCH | `/api/products/{product_id}` | Actualiza parcialmente un producto. |
-| DELETE | `/api/products/{product_id}` | Elimina un producto.                |
+| Método |          Endpoint            |             Descripción             |    Permiso    |
+|--------|------------------------------|-------------------------------------|---------------|
+| GET    | `/api/products`              | Obtiene todos los productos.        | Público       |
+| GET    | `/api/products/{product_id}` | Obtiene un producto por su ID.      | Público       |
+| POST   | `/api/products`              | Crea un producto.                   | Administrador |
+| PATCH  | `/api/products/{product_id}` | Actualiza parcialmente un producto. | Administrador |
+| DELETE | `/api/products/{product_id}` | Elimina un producto.                | Administrador |
+
+Las rutas protegidas requieren un token JWT válido de un usuario con rol de administrador. En las peticiones protegidas, envía el encabezado:
+
+```http
+Authorization: Bearer <access_token>
+```
 
 ## Instalación y configuración
 
@@ -58,11 +84,11 @@ cd StoreAPI
 
 ### 2. Crear y activar el entorno virtual
 
-En Windows:
+En Windows, utilizando Git Bash:
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate
+source .venv/Scripts/activate
 ```
 
 ### 3. Instalar las dependencias
@@ -73,15 +99,43 @@ python -m pip install -r requirements.txt
 
 ### 4. Configurar las variables de entorno
 
-Crea un archivo `.env` en la raíz del proyecto y configura las variables necesarias para la conexión con MySQL.
+Copia `.env.example` a un archivo llamado `.env` y configura tus valores locales.
 
-Utiliza los nombres de variables que espera la aplicación. No publiques las credenciales reales en GitHub.
+Las variables utilizadas por la aplicación son:
+
+|     Variable     |                    Descripción                     |
+|------------------|----------------------------------------------------|
+| `JWT_SECRET_KEY` | Clave secreta para firmar los JWT.                 |
+| `DB_USER`        | Usuario de MySQL.                                  |
+| `DB_PASSWORD`    | Contraseña de MySQL.                               |
+| `DB_HOST`        | Dirección del servidor MySQL.                      |
+| `DB_PORT`        | Puerto del servidor MySQL.                         |
+| `DB_NAME`        | Nombre de la base de datos de desarrollo.          |
+| `TEST_DB_NAME`   | Nombre de la base de datos exclusiva para pruebas. |
+
+Los valores de ejemplo de `.env.example` deben sustituirse por los de tu entorno local. Utiliza una clave JWT secreta y segura. No publiques el archivo `.env` ni compartas contraseñas reales en GitHub.
 
 ### 5. Crear las bases de datos
 
-Crea en MySQL la base de datos de desarrollo y la base de datos de pruebas que utiliza la configuración del proyecto.
+Crea en MySQL las bases de datos de desarrollo y pruebas que utiliza la configuración de la aplicación.
 
-La base de datos de pruebas debe llamarse `storeapi_test_db`, según la comprobación de seguridad de la configuración de pytest.
+La base de datos de pruebas debe llamarse `storeapi_test_db`, según la comprobación de seguridad configurada en pytest.
+
+### 6. Ejecutar las migraciones
+
+Con la base de datos configurada, consulta el estado de las migraciones:
+
+```bash
+python -m flask --app app db current
+```
+
+Para aplicar las migraciones pendientes:
+
+```bash
+python -m flask --app app db upgrade
+```
+
+**Nota:** el historial de migraciones existente incluye la creación de la tabla `users`. La tabla `products` se creó antes de incorporar las migraciones, por lo que su creación inicial no está representada en ese historial.
 
 ## Ejecución de la aplicación
 
@@ -95,13 +149,13 @@ La aplicación estará disponible en la dirección local que indique Flask al in
 
 ### Verificar el estado de la API
 
-Puedes comprobar que la API funciona enviando una petición GET a:
+Envía una petición GET a:
 
 ```http
 GET /api/health
 ```
 
-La respuesta esperada es:
+Respuesta esperada:
 
 ```json
 {
@@ -110,25 +164,57 @@ La respuesta esperada es:
 }
 ```
 
-## Pruebas automatizadas
+## Autenticación
 
-El proyecto utiliza pytest para verificar el comportamiento de los endpoints y la gestión de errores.
+### Registrar un usuario
 
-Para ejecutar todas las pruebas, utiliza:
-
-```bash
-python -m pytest -v
+```http
+POST /api/auth/register
+Content-Type: application/json
 ```
 
-Para ejecutar las pruebas de un archivo específico:
+Cuerpo de la petición:
 
-```bash
-python -m pytest tests/test_app.py -v
+```json
+{
+  "username": "usuario_prueba",
+  "email": "usuario@example.com",
+  "password": "ClaveSegura123"
+}
 ```
 
-Las pruebas utilizan una base de datos independiente llamada `storeapi_test_db` para evitar afectar los datos de desarrollo.
+Respuesta exitosa: `201 Created`.
 
-## Ejemplos de uso
+Los usuarios registrados reciben el rol `user` por defecto.
+
+### Iniciar sesión
+
+```http
+POST /api/auth/login
+Content-Type: application/json
+```
+
+Cuerpo de la petición:
+
+```json
+{
+  "email": "usuario@example.com",
+  "password": "ClaveSegura123"
+}
+```
+
+Respuesta exitosa: `200 OK`. La respuesta incluye un `access_token` que se utiliza para acceder a las rutas protegidas.
+
+### Consultar la identidad del token
+
+```http
+GET /api/auth/me
+Authorization: Bearer <access_token>
+```
+
+Respuesta exitosa: `200 OK`.
+
+## Ejemplos de uso de productos
 
 ### Consultar todos los productos
 
@@ -136,7 +222,7 @@ Las pruebas utilizan una base de datos independiente llamada `storeapi_test_db` 
 GET /api/products
 ```
 
-Respuesta exitosa (`200 OK`):
+Respuesta de ejemplo:
 
 ```json
 [
@@ -154,8 +240,11 @@ Respuesta exitosa (`200 OK`):
 
 ### Crear un producto
 
+Esta operación requiere un token de administrador.
+
 ```http
 POST /api/products
+Authorization: Bearer <access_token>
 Content-Type: application/json
 ```
 
@@ -176,8 +265,11 @@ Respuesta exitosa: `201 Created`.
 
 ### Actualizar el stock de un producto
 
+Esta operación requiere un token de administrador.
+
 ```http
 PATCH /api/products/1
+Authorization: Bearer <access_token>
 Content-Type: application/json
 ```
 
@@ -193,8 +285,11 @@ Respuesta exitosa: `200 OK`.
 
 ### Eliminar un producto
 
+Esta operación requiere un token de administrador.
+
 ```http
 DELETE /api/products/1
+Authorization: Bearer <access_token>
 ```
 
 Respuesta exitosa: `200 OK`.
@@ -204,3 +299,44 @@ Respuesta exitosa: `200 OK`.
   "message": "Producto eliminado correctamente"
 }
 ```
+
+## Pruebas automatizadas
+
+El proyecto utiliza pytest para verificar el comportamiento de los endpoints, la autenticación, los permisos y la gestión de errores.
+
+Ejecutar todas las pruebas:
+
+```bash
+python -m pytest -v
+```
+
+Ejecutar las pruebas de productos:
+
+```bash
+python -m pytest tests/test_app.py -v
+```
+
+Ejecutar las pruebas de autenticación:
+
+```bash
+python -m pytest tests/test_auth.py -v
+```
+
+Las pruebas utilizan una base de datos independiente llamada `storeapi_test_db`. La configuración incluye una comprobación para evitar que las operaciones de limpieza de las pruebas se ejecuten sobre otra base de datos.
+
+## Pruebas manuales con Postman
+
+Puedes utilizar Postman para probar los endpoints de salud, productos y autenticación.
+
+Para probar las operaciones protegidas:
+
+1. Registra un usuario e inicia sesión.
+2. Copia el `access_token` devuelto por el inicio de sesión.
+3. Utiliza el token en el encabezado `Authorization: Bearer <access_token>`.
+4. Recuerda que un usuario normal no puede crear, actualizar ni eliminar productos; esas operaciones requieren un usuario administrador.
+
+## Control de versiones
+
+El proyecto utiliza Git para gestionar los cambios y GitHub para alojar el repositorio.
+
+El archivo `.env` está excluido mediante `.gitignore`. El archivo `.env.example` sirve como plantilla de configuración sin credenciales reales.
